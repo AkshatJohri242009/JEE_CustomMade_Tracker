@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JEE Study Tracker</title>
+<meta name="description" content="Track your JEE preparation progress, study sessions, and compete with friends.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#638bff">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- SVG Gradient Defs -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#638bff"/><stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <linearGradient id="tg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#638bff"/><stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<!-- ══ HEADER ══ -->
+<div class="site-top">
+  <div class="logo">
+    <h1>Study Tracker</h1>
+    <p>JEE Preparation · Track. Focus. Sync.</p>
+  </div>
+  <div class="header-right">
+    <div class="streak-badge" id="streak-badge" title="Study streak">🔥 <span id="streak-count">0</span></div>
+    <div class="save-status" id="save-status">
+      <span class="save-dot"></span>
+      <span id="save-txt">Auto-saved</span>
+    </div>
+    <label class="theme-tog" title="Toggle theme">
+      <input type="checkbox" id="theme-sw" onchange="toggleTheme(this)">
+      <span class="th-track"></span>
+      <span class="th-knob" id="th-knob">🌙</span>
+    </label>
+  </div>
+</div>
+
+<!-- ══ COUNTDOWN BAR ══ -->
+<div class="countdown-bar" id="countdown-bar"></div>
+
+<!-- ══ TAB NAV ══ -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('tracker',this)"><span class="tab-icon">📚</span> Tracker</button>
+  <button class="tab-btn" onclick="switchTab('friends',this)"><span class="tab-icon">👥</span> Friends</button>
+  <button class="tab-btn" onclick="switchTab('timers',this)"><span class="tab-icon">⏱</span> Timers</button>
+  <button class="tab-btn" onclick="switchTab('analytics',this)"><span class="tab-icon">📊</span> Analytics</button>
+</div>
+
+<!-- ══ TRACKER TAB ══ -->
+<div class="tab-panel active" id="tab-tracker">
+<div class="content">
+
+  <!-- Overall Progress -->
+  <div class="overall-card">
+    <div class="ring-wrap">
+      <svg class="ring-svg" width="76" height="76" viewBox="0 0 76 76">
+        <circle class="ring-track" cx="38" cy="38" r="34"/>
+        <circle class="ring-fill" cx="38" cy="38" r="34" id="ring-fill"/>
+      </svg>
+      <div class="ring-lbl">
+        <span class="ring-pct" id="ring-pct">0%</span>
+        <span class="ring-word">done</span>
+      </div>
+    </div>
+    <div class="overall-info">
+      <h3>Overall Progress</h3>
+      <div class="bar-track"><div class="bar-fill-c" id="overall-bar-c"></div><div class="bar-fill-s" id="overall-bar-s"></div></div>
+      <div class="overall-stats">
+        <div class="ostat"><span class="ostat-val" id="st-conf">0</span><span class="ostat-lbl">Confident</span></div>
+        <div class="ostat"><span class="ostat-val" id="st-stud">0</span><span class="ostat-lbl">Studied</span></div>
+        <div class="ostat"><span class="ostat-val" id="st-total">0</span><span class="ostat-lbl">Total</span></div>
+        <div class="ostat"><span class="ostat-val" id="st-subj">3</span><span class="ostat-lbl">Subjects</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily Goals -->
+  <div class="goals-card" id="goals-card">
+    <div class="goals-header">
+      <span class="goals-title">📅 Daily Goals</span>
+      <button class="goals-edit-btn" onclick="toggleGoalsEdit()" title="Edit goals">⚙️</button>
+    </div>
+    <div class="goal-row">
+      <span class="goal-emoji">📖</span>
+      <div class="goal-info">
+        <div class="goal-label">Topics today</div>
+        <div class="goal-bar-track"><div class="goal-bar-fill topics" id="goal-topics-bar"></div></div>
+      </div>
+      <span class="goal-value" id="goal-topics-val">0/3</span>
+    </div>
+    <div class="goal-row">
+      <span class="goal-emoji">⏰</span>
+      <div class="goal-info">
+        <div class="goal-label">Study hours</div>
+        <div class="goal-bar-track"><div class="goal-bar-fill hours" id="goal-hours-bar"></div></div>
+      </div>
+      <span class="goal-value" id="goal-hours-val">0/4h</span>
+    </div>
+    <div class="goals-edit-form" id="goals-edit-form">
+      <label>Topics/day:</label>
+      <input type="number" id="ge-topics" min="1" max="50" value="3">
+      <label>Hours/day:</label>
+      <input type="number" id="ge-hours" min="1" max="16" value="4">
+      <button class="btn-ok" style="padding:5px 12px;font-size:.75rem" onclick="saveDailyGoals()">Save</button>
+    </div>
+  </div>
+
+  <!-- Search & Filter -->
+  <div class="search-filter-row">
+    <input type="text" class="search-input" id="search-input" placeholder="Search topics…" oninput="applyFilters()">
+    <select class="filter-select" id="filter-select" onchange="applyFilters()">
+      <option value="all">All Topics</option>
+      <option value="not-started">❌ Not Started</option>
+      <option value="studied">🟡 Studied</option>
+      <option value="confident">✅ Confident</option>
+      <option value="revision">🔄 Due for Revision</option>
+      <option value="high">🔥 High Yield</option>
+    </select>
+  </div>
+
+  <div class="cards-wrap" id="cards-wrap"></div>
+
+  <div class="add-subj-section">
+    <button class="add-subj-toggle" onclick="toggleSubjForm()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 14 14"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Add Subject
+    </button>
+    <div class="add-subj-form" id="subj-form">
+      <h4>New Subject</h4>
+      <div class="asf-row">
+        <input type="text" id="new-sname" placeholder="Subject name (e.g. Computer Science)" maxlength="30">
+      </div>
+      <div class="color-row">
+        <label>Accent color:</label>
+        <div class="cswatch sel" style="background:#638bff" data-color="#638bff" onclick="pickColor(this)"></div>
+        <div class="cswatch" style="background:#f472b6" data-color="#f472b6" onclick="pickColor(this)"></div>
+        <div class="cswatch" style="background:#fb923c" data-color="#fb923c" onclick="pickColor(this)"></div>
+        <div class="cswatch" style="background:#a78bfa" data-color="#a78bfa" onclick="pickColor(this)"></div>
+        <div class="cswatch" style="background:#34d399" data-color="#34d399" onclick="pickColor(this)"></div>
+        <div class="cswatch" style="background:#fbbf24" data-color="#fbbf24" onclick="pickColor(this)"></div>
+        <div class="cswatch" style="background:#22d3ee" data-color="#22d3ee" onclick="pickColor(this)"></div>
+        <div class="cswatch" style="background:#f87171" data-color="#f87171" onclick="pickColor(this)"></div>
+      </div>
+      <div class="asf-btns">
+        <button class="btn-cxl" onclick="cancelSubjForm()">Cancel</button>
+        <button class="btn-ok" style="background:#638bff" onclick="addSubject()">Create Subject</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export / Import -->
+  <div class="ei-row">
+    <button class="ei-btn" onclick="exportData()">📦 Export Backup</button>
+    <button class="ei-btn" onclick="document.getElementById('import-file').click()">📥 Import Backup</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+  </div>
+
+</div>
+</div>
+
+<!-- ══ FRIENDS TAB ══ -->
+<div class="tab-panel" id="tab-friends">
+<div class="content">
+  <div class="friends-layout">
+    <div class="glass-panel">
+      <div class="gp-title">My Profile</div>
+      <div class="username-area">
+        <label>Your username</label>
+        <div class="uname-row">
+          <input type="text" class="fi-input" id="my-username" placeholder="e.g. akshat24" maxlength="20">
+          <button class="fi-btn" onclick="saveMyProfile()">Save</button>
+        </div>
+      </div>
+      <div class="my-code-section">
+        <div class="gp-title">Share code</div>
+        <div class="code-box" id="my-code-box" onclick="copyMyCode()" title="Click to copy">
+          Set a username to generate your code
+        </div>
+        <div class="copy-note" id="copy-note">Click to copy · Share with friends to let them track you</div>
+      </div>
+      <div class="add-friend-section">
+        <div class="gp-title" style="margin-bottom:10px">Add a Friend</div>
+        <div class="friend-search-row">
+          <input type="text" class="fi-input" id="friend-code-input" placeholder="Paste friend's share code">
+          <button class="fi-btn" onclick="addFriendFromCode()">Add</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="glass-panel" style="margin-bottom:16px">
+        <div class="gp-title">Friends' Progress</div>
+        <div class="friends-list" id="friends-list">
+          <div class="empty-state">No friends added yet.<br>Share your code and add theirs!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ TIMERS TAB ══ -->
+<div class="tab-panel" id="tab-timers">
+<div class="content">
+<div class="timers-grid">
+
+  <!-- Journey Mode (Flight Timer) -->
+  <div class="timer-card">
+    <div class="topic-picker-header" onclick="toggleTopicPicker('flight')" id="tph-flight">
+      <div class="tph-left">
+        <span class="tph-icon">📌</span>
+        <span class="tph-label" id="tpl-flight">Select topic to complete</span>
+      </div>
+      <span class="tph-chevron">▼</span>
+    </div>
+    <div class="topic-picker-panel" id="tpp-flight">
+      <div class="tp-scroll" id="tps-flight"></div>
+    </div>
+    <div class="timer-body">
+      <div class="timer-label">✈️ Journey Mode</div>
+      <div class="journey-ctx" id="journey-ctx" style="display:none"></div>
+      <div class="flight-inputs">
+        <div class="airport-field">
+          <label>FROM</label>
+          <input type="text" class="airport-input" id="from-input" placeholder="City or airport code…" autocomplete="off" oninput="airportSearch(this,'from-dd')" onblur="hideDD('from-dd',300)">
+          <div class="airport-dropdown" id="from-dd"></div>
+        </div>
+        <div class="airport-field">
+          <label>TO</label>
+          <input type="text" class="airport-input" id="to-input" placeholder="City or airport code…" autocomplete="off" oninput="airportSearch(this,'to-dd')" onblur="hideDD('to-dd',300)">
+          <div class="airport-dropdown" id="to-dd"></div>
+        </div>
+      </div>
+      <div class="flight-info" id="flight-info">
+        <span style="color:var(--text3)">Enter departure & destination to calculate flight time</span>
+      </div>
+      <div class="clock-ring-wrap">
+        <svg class="clock-svg" width="190" height="190" viewBox="0 0 190 190">
+          <circle class="clock-track" cx="95" cy="95" r="90"/>
+          <circle class="clock-fill" cx="95" cy="95" r="90" id="cf-flight"/>
+        </svg>
+        <div class="clock-inner">
+          <span class="clock-time" id="ct-flight">--:--:--</span>
+          <span class="clock-state" id="cs-flight">waiting</span>
+        </div>
+      </div>
+      <div class="timer-controls">
+        <button class="tc-btn primary" id="tb-start-flight" onclick="flightStart()">▶ Start</button>
+        <button class="tc-btn" onclick="flightPause()" id="tb-pause-flight" style="display:none">⏸ Pause</button>
+        <button class="tc-btn danger" onclick="flightReset()">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Focus / Pomodoro Timer -->
+  <div class="timer-card">
+    <div class="topic-picker-header" onclick="toggleTopicPicker('focus')" id="tph-focus">
+      <div class="tph-left">
+        <span class="tph-icon">📌</span>
+        <span class="tph-label" id="tpl-focus">Select topic to complete</span>
+      </div>
+      <span class="tph-chevron">▼</span>
+    </div>
+    <div class="topic-picker-panel" id="tpp-focus">
+      <div class="tp-scroll" id="tps-focus"></div>
+    </div>
+    <div class="timer-body">
+      <div class="timer-label">🔬 Focus Timer</div>
+
+      <!-- Simple / Pomodoro toggle -->
+      <div class="pomo-toggle">
+        <button class="pomo-toggle-btn active" id="pomo-simple-btn" onclick="setPomodoroMode(false)">Simple</button>
+        <button class="pomo-toggle-btn" id="pomo-pomo-btn" onclick="setPomodoroMode(true)">Pomodoro</button>
+      </div>
+
+      <!-- Simple mode presets -->
+      <div id="simple-presets">
+        <div class="preset-row" id="focus-presets">
+          <button class="preset-btn" data-sec="1500" onclick="setPreset(this,1500)">25m</button>
+          <button class="preset-btn" data-sec="2700" onclick="setPreset(this,2700)">45m</button>
+          <button class="preset-btn active" data-sec="3600" onclick="setPreset(this,3600)">1h</button>
+          <button class="preset-btn" data-sec="5400" onclick="setPreset(this,5400)">1.5h</button>
+          <button class="preset-btn" data-sec="7200" onclick="setPreset(this,7200)">2h</button>
+        </div>
+        <div class="custom-duration">
+          <input type="number" id="custom-min" placeholder="0" min="1" max="600" value="" onchange="setCustomDuration()">
+          <label>min custom</label>
+        </div>
+      </div>
+
+      <!-- Pomodoro config -->
+      <div class="pomo-config" id="pomo-config">
+        <label>Focus:</label><input type="number" id="pomo-focus-min" value="25" min="1" max="120" onchange="updatePomoSettings()">
+        <label>Break:</label><input type="number" id="pomo-break-min" value="5" min="1" max="30" onchange="updatePomoSettings()">
+        <label>Cycles:</label><input type="number" id="pomo-cycles" value="4" min="1" max="12" onchange="updatePomoSettings()">
+      </div>
+      <div class="pomo-indicator" id="pomo-indicator"></div>
+
+      <div class="clock-ring-wrap">
+        <svg class="clock-svg" width="190" height="190" viewBox="0 0 190 190">
+          <circle class="clock-track" cx="95" cy="95" r="90"/>
+          <circle class="clock-fill" cx="95" cy="95" r="90" id="cf-focus"/>
+        </svg>
+        <div class="clock-inner">
+          <span class="clock-time" id="ct-focus">01:00:00</span>
+          <span class="clock-state" id="cs-focus">ready</span>
+        </div>
+      </div>
+      <div class="timer-controls">
+        <button class="tc-btn primary" id="tb-start-focus" onclick="focusStart()">▶ Start</button>
+        <button class="tc-btn" onclick="focusPause()" id="tb-pause-focus" style="display:none">⏸ Pause</button>
+        <button class="tc-btn danger" onclick="focusReset()">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+
+<!-- ══ ANALYTICS TAB ══ -->
+<div class="tab-panel" id="tab-analytics">
+<div class="content">
+  <div class="an-grid">
+    <div class="an-stats-row" id="an-stats-row"></div>
+    <div class="an-card">
+      <div class="an-card-title">📅 Study Heatmap (Last 12 Weeks)</div>
+      <div class="an-heatmap" id="an-heatmap"></div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-title">📊 Study Hours (Last 7 Days)</div>
+      <div class="an-chart-wrap" id="an-weekly-chart"></div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-title">📘 Subject Breakdown</div>
+      <div class="an-donuts-grid" id="an-subject-donuts"></div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-title">🏆 Badges</div>
+      <div class="an-badges-grid" id="an-badges"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ COMPLETION MODAL ══ -->
+<div class="modal-overlay" id="completion-modal">
+  <div class="modal-card">
+    <span class="modal-emoji">🎯</span>
+    <div class="modal-q">Did you complete this topic?</div>
+    <div class="modal-tname" id="modal-tname">—</div>
+    <div class="modal-sname" id="modal-sname">—</div>
+    <div class="modal-btns">
+      <button class="mb-no" onclick="handleCompletion(false)">Not yet</button>
+      <button class="mb-yes" onclick="handleCompletion(true)">✓ Mark Complete!</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
